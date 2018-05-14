@@ -9,7 +9,7 @@
 - 使用`PostCSS`对CSS进行预处理
 
 ## 预览
-![](./static/images/EmotionalSticker.jpg 'EmotionalSticker')
+![](./static/EmotionalSticker.jpg 'EmotionalSticker')
 
 ## 运行项目
 ```
