@@ -1,44 +1,40 @@
 <template>
   <div>
-    <mpvue-cropper 
-      :option="cropperOpt"
-      @ready="cropperReady"
-      @beforeDraw="cropperBeforeDraw"
-      @beforeImageLoad="cropperBeforeImageLoad"
-      @beforeLoad="cropperLoad"
-      ></mpvue-cropper>
-    <div class="cropper-buttons">
-      <div
-        class="upload"
-        @tap="uploadTap">
-        上传图片
-      </div>
-      <div
-        class="getCropperImage"
-        @tap="getCropperImage">
-        生成图片
-      </div>
+    <canvas
+        canvas-id="__mpvue_cropper__"
+        @touchstart="touchstart"
+        @touchmove="touchmove"
+        @touchend="touchend"
+        disable-scroll
+        :style="{ width: cropperOpt.width + 'px', height: cropperOpt.height + 'px', background: 'rgba(0, 0, 0, .8)' }">
+    </canvas>
+      <div class="cropper-buttons">
+        <div
+            class="upload"
+            @tap="uploadTap">
+            上传图片
+        </div>
+        <div
+            class="getCropperImage"
+            @tap="getCropperImage">
+            生成图片
+        </div>
     </div>
   </div>
 </template>
 
 <script>
-import MpvueCropper from 'mpvue-cropper'
+import WeCropper from 'we-cropper'
+const CANVAS_ID = '__mpvue_cropper__'
 
 const device = wx.getSystemInfoSync()
 const width = device.windowWidth
 const height = device.windowHeight - 50
-const getComponentByTag = (parent, tag) => {
-  for (let c of parent.$children) {
-    if (c.$options._componentTag === tag) {
-      return c
-    }
-  }
-}
-
 export default {
+  name: 'mpvue-cropper',
   data () {
     return {
+      _we_cropper: null,
       cropper: null,
       cropperOpt: {
         width,
@@ -54,12 +50,38 @@ export default {
       }
     }
   },
-
-  components: {
-    MpvueCropper
-  },
-
   methods: {
+    touchstart ($event) {
+      this._we_cropper.touchStart($event.mp)
+    },
+    touchmove ($event) {
+      this._we_cropper.touchMove($event.mp)
+    },
+    touchend ($event) {
+      this._we_cropper.touchEnd($event.mp)
+    },
+    pushOrigin (src) {
+      this._we_cropper.pushOrign(src)
+    },
+    updateCanvas () {
+      this._we_cropper.updateCanvas()
+    },
+    getCropperBase64 () {
+      return new Promise((resolve, reject) => {
+        this._we_cropper.getCropperImage(src => {
+          src ? resolve(src) : reject()
+        })
+      })
+    },
+    getCropperImage () {
+      this._we_cropper.getCropperImage(src => {
+        // src ? resolve(src) : reject()
+        console.log(src)
+        wx.redirectTo({
+          url: '/pages/index/main?path=' + src
+        })
+      })
+    },
     cropperReady (...args) {
       console.log('cropper ready!')
     },
@@ -78,33 +100,36 @@ export default {
         count: 1, // 默认9
         sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
         sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
-        success: (res) => {
+        success: function (res) {
           const src = res.tempFilePaths[0]
           //  获取裁剪图片资源后，给data添加src属性及其值
-          _this.cropper.pushOrigin(src)
+          _this.pushOrigin(src)
         }
-      })
-    },
-    getCropperImage () {
-      this.cropper.getCropperImage().then((src) => {
-        wx.previewImage({
-          current: '', // 当前显示图片的http链接
-          urls: [src] // 需要预览的图片http链接列表
-        })
-      }).catch(e => {
-        console.error('获取图片失败')
       })
     }
   },
-
   mounted () {
-    // let _this = this
-    this.cropper = getComponentByTag(this, 'mpvue-cropper')
+    this._we_cropper = new WeCropper(Object.assign(this.cropperOpt, {
+      id: CANVAS_ID
+    }))
+      .on('ready', (...args) => {
+        this.$emit('ready', ...args)
+      })
+      .on('beforeImageLoad', (...args) => {
+        this.$emit('beforeImageLoad', ...args)
+      })
+      .on('imageLoad', (...args) => {
+        this.$emit('imageLoad', ...args)
+      })
+      .on('beforeDraw', (...args) => {
+        this.$emit('beforeDraw', ...args)
+      })
+      .updateCanvas()
   }
 }
 </script>
-
 <style>
+
 .cropper-wrapper{
     position: relative;
     display: flex;
@@ -142,7 +167,7 @@ export default {
 }
 
 .cropper-buttons{
-    background-color: rgba(0, 0, 0, 0.95);
-    color: #04b00f;
+    background-color: #cd3e3a;
+    color: #F2F4F5;
 }
 </style>

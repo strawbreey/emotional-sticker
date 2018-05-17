@@ -28,6 +28,7 @@ export default {
     return {
       title: '情头贴纸',
       path: '/pages/index/main',
+      imageUrl: this.path,
       success: function (res) {
         // 转发成功
       },
@@ -57,6 +58,10 @@ export default {
 
   mounted () {
     this.path = this.$mp.query.path
+  },
+
+  onHide () {
+    // this.path = ''
   }
 }
 </script>

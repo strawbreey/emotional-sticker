@@ -1,6 +1,7 @@
 <template>
   <div class="container h-auto p-0 bg-light pt-5" style="min-height: 100vh; box-sizing: border-box;">
-    <canvas class="m-auto rounded shadow" style="width: 300px; height: 300px; overflow: hidden;" canvas-id="firstCanvas" disable-scroll="true"
+  
+    <canvas class="m-auto rounded shadow" style="width: 300px; height: 300px; overflow: hidden; background-image: url('http://p0jp9nkiy.bkt.clouddn.com/o.png');" canvas-id="firstCanvas" disable-scroll="true"
       @touchstart="touchstart" @touchmove="touchmove" @touchend="touchend" @touchcancel="touchcancel"></canvas>
     
     <div class="fixed-bottom bg-primary box-shadow-top">
@@ -12,17 +13,19 @@
       </div>
 
       <a class="position-absolute reset bg-primary border-light d-flex justify-content-center align-items-center shadow" @click="reset">
-        <image src="/static/images/icon/reset.svg" style="width: 80rpx; height: 80rpx;" alt="reset" />        
+        <image src="/static/images/icon/plus.svg" style="width: 80rpx; height: 80rpx;" alt="reset" />        
       </a>
       <a class="position-absolute done bg-primary border-light d-flex justify-content-center align-items-center shadow" @click="next">
         <img src="/static/images/icon/right.svg" style="width: 80rpx; height: 80rpx;" alt="next"/>
       </a>
+
+      
       
       <scroll-view scroll-x class="py-2" style="width: 100vw; height: 224rpx;">
-        <div class="d-flex justify-content-between flex-nowrap px-2">
-          <view v-for="(item, index) in list" :item="item" :key="index" class="m-2 p-2 bg-light rounded shadow">
-            <button v-if="item.isAuth" open-type="getUserInfo" @getuserinfo="getuserinfo">
-              <img style="width: 160rpx; height: 160rpx; overflow: hidden;" :src="item.path" alt="img">
+        <div class="d-flex px-2 justify-content-between flex-nowrap px-2">
+          <view v-for="(item, index) in list" :item="item" :key="index" class="m-2 p-2 bg-light rounded shadow item">
+            <button v-if="item.isAuth" open-type="getUserInfo" @getuserinfo="getuserinfo" style="background-color: transparent;">
+              <img class="shadow-sm" style="width: 160rpx; height: 160rpx; overflow: hidden;" :src="item.path" alt="img">
             </button>
             <view v-else @click="select2(index)">
               <img style="width: 160rpx; height: 160rpx; overflow: hidden;" :src="item.path" alt="img">
@@ -58,7 +61,7 @@ export default {
         type: 'photo',
         width: 300,
         height: 300,
-        path: '/static/images/photo/2.png',
+        path: '/static/images/photo/1.png',
         trans: 0,
         zIndex: 0
       },
@@ -289,18 +292,38 @@ export default {
         success: function (res) {
           _this.avatarList[0].path = res.tempFilePath
           _this.avatarList[0].isAuth = false
+          _this.avatar.path = _this.avatarList[0].path
+          _this.drawimage()
         }
       })
     },
     reset () {
       // 初始化
-      this.avatar.path = '/static/images/avatar/1.png'
-      this.photo.path = ''
-      this.elements = []
-      this.drawimage()
+      // this.avatar.path = '/static/images/avatar/1.png'
+      // this.photo.path = ''
+      // this.elements = []
+      // this.drawimage()
+      let _this = this
+      wx.showActionSheet({
+        itemList: ['选择照片', '选择头像'],
+        success: function (res) {
+          console.log(res.tapIndex)
+          if (res.tapIndex === 0) {
+            wx.navigateTo({
+              url: '/pages/cropper/main'
+            })
+          } else if (res.tapIndex === 1) {
+            _this.getInfo()
+          }
+        },
+        fail: function (res) {
+          console.log(res.errMsg)
+        }
+      })
     },
     drawimage () {
       // 头像
+      console.log('drawimage')
       if (this.avatar.path) {
         this.context.drawImage(this.avatar.path, this.avatar.x, this.avatar.y, this.avatar.width, this.avatar.height)
       }
@@ -339,7 +362,6 @@ export default {
       this.context.draw()
     },
     touchstart (e) {
-      let _this = this
       // 判断是偏移, 旋转还是放大
       console.log('touchstart')
       // 触摸的开始值
@@ -388,20 +410,8 @@ export default {
               e.touches[0].x < (del.x + 16) &&
               e.touches[0].y > (del.y - 16) &&
               e.touches[0].y < (del.y + 16)) {
-            wx.showModal({
-              title: '提示',
-              content: '请问要删除这张贴纸吗',
-              success: function (res) {
-                if (res.confirm) {
-                  console.log('用户点击确定')
-                  _this.touch.method = 'clear'
-                  _this.touch.delete = i
-                  _this.delete()
-                } else if (res.cancel) {
-                  console.log('用户点击取消')
-                }
-              }
-            })
+            this.touch.method = 'clear'
+            this.touch.delete = i
             break
           }
 
@@ -572,20 +582,47 @@ export default {
         item.active = false
       }
       this.drawimage()
-      wx.canvasToTempFilePath({
-        x: 0,
-        y: 0,
-        width: 300,
-        height: 300,
-        destWidth: 600,
-        destHeight: 600,
-        canvasId: 'firstCanvas',
-        success: function (res) {
-          console.log(res.tempFilePath)
-          wx.hideLoading()
-          wx.navigateTo({
-            url: '/pages/share/main?path=' + res.tempFilePath
-          })
+      setTimeout(() => {
+        wx.canvasToTempFilePath({
+          x: 0,
+          y: 0,
+          width: 300,
+          height: 300,
+          destWidth: 600,
+          destHeight: 600,
+          canvasId: 'firstCanvas',
+          success: function (res) {
+            console.log(res.tempFilePath)
+            wx.hideLoading()
+            wx.navigateTo({
+              url: '/pages/share/main?path=' + res.tempFilePath
+            })
+          }
+        })
+      }, 100)
+    },
+    getInfo () {
+      let _this = this
+      wx.getSetting({
+        success: function (response) {
+          if (response.authSetting['scope.userInfo']) {
+            wx.getUserInfo({
+              success: function (res) {
+                console.log(res)
+                wx.downloadFile({
+                  url: res.userInfo.avatarUrl,
+                  success: function (r) {
+                    _this.avatarList[0].path = r.tempFilePath
+                    _this.avatar.path = _this.avatarList[0].path
+                    _this.avatarList[0].isAuth = false
+                    _this.drawimage()
+                  }
+                })
+              }
+            })
+          } else {
+            _this.drawimage()
+          }
         }
       })
     }
@@ -600,13 +637,26 @@ export default {
     } else if (this.active === 'icon') {
       this.list = this.iconList
     }
-    this.drawimage()
+
+    if (this.$mp.query.path) {
+      console.log(this.$mp.query.path)
+      this.avatarList[0].path = this.$mp.query.path
+      this.avatar.path = this.avatarList[0].path
+      this.drawimage()
+    } else {
+      this.getInfo()
+    }
+    // this.drawimage()
   }
 }
 </script>
 <style lang="scss">
 .box-shadow-top{
   box-shadow:  0 -0.5rem 2rem rgba(#333, .15);
+}
+
+.item{
+  background-image: url('http://p0jp9nkiy.bkt.clouddn.com/o.png');
 }
 .reset{
   top: -75rpx;
