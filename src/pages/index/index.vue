@@ -1,7 +1,7 @@
 <template>
   <div class="container h-auto p-0 bg-light pt-5" style="min-height: 100vh; box-sizing: border-box;">
   
-    <canvas class="m-auto rounded shadow" style="width: 300px; height: 300px; overflow: hidden; background-image: url('http://p0jp9nkiy.bkt.clouddn.com/o.png');" canvas-id="firstCanvas" disable-scroll="true"
+    <canvas class="m-auto rounded shadow" style="width: 600px; height: 600px; overflow: hidden; background-image: url('http://p0jp9nkiy.bkt.clouddn.com/o.png');" canvas-id="firstCanvas" disable-scroll="true"
       @touchstart="touchstart" @touchmove="touchmove" @touchend="touchend" @touchcancel="touchcancel"></canvas>
     
     <div class="fixed-bottom bg-primary box-shadow-top">
@@ -9,6 +9,8 @@
         <div class="col p-0" :class="{'font-weight-bold': active === 'avatar'}" @click="select('avatar')">头像</div>
         <div class="col p-0" :class="{'font-weight-bold': active === 'photo'}" @click="select('photo')">边框</div>
         <div class="col p-0" :class="{'font-weight-bold': active === 'icon'}" @click="select('icon')">贴纸</div>
+        <div class="col p-0" :class="{'font-weight-bold': active === 'text'}" @click="select('text')">文字</div>
+        
         <!-- <div class="col p-0" :class="{'font-weight-bold': active === 'text'}" @click="select('text')">文字</div>       -->
       </div>
 
@@ -181,83 +183,7 @@ export default {
           path: '/static/images/photo/10.png'
         }
       ],
-      iconList: [
-        {
-          path: '/static/images/guajian/1.png'
-        },
-        {
-          path: '/static/images/guajian/2.png'
-        },
-        {
-          path: '/static/images/guajian/3.png'
-        },
-        {
-          path: '/static/images/guajian/4.png'
-        },
-        {
-          path: '/static/images/guajian/5.png'
-        },
-        {
-          path: '/static/images/guajian/6.png'
-        },
-        {
-          path: '/static/images/guajian/7.png'
-        },
-        {
-          path: '/static/images/guajian/8.png'
-        },
-        {
-          path: '/static/images/guajian/9.png'
-        },
-        {
-          path: '/static/images/guajian/10.png'
-        },
-        {
-          path: '/static/images/guajian/11.png'
-        },
-        {
-          path: '/static/images/guajian/12.png'
-        },
-        {
-          path: '/static/images/guajian/13.png'
-        },
-        {
-          path: '/static/images/guajian/14.png'
-        },
-        {
-          path: '/static/images/guajian/15.png'
-        },
-        {
-          path: '/static/images/guajian/16.png'
-        },
-        {
-          path: '/static/images/guajian/17.png'
-        },
-        {
-          path: '/static/images/guajian/18.png'
-        },
-        {
-          path: '/static/images/guajian/19.png'
-        },
-        {
-          path: '/static/images/guajian/20.png'
-        },
-        {
-          path: '/static/images/guajian/21.png'
-        },
-        {
-          path: '/static/images/guajian/22.png'
-        },
-        {
-          path: '/static/images/guajian/23.png'
-        },
-        {
-          path: '/static/images/guajian/24.png'
-        },
-        {
-          path: '/static/images/guajian/25.png'
-        }
-      ],
+      iconList: [],
       list: null,
       active: 'avatar',
       timer: 0,
@@ -299,10 +225,6 @@ export default {
     },
     reset () {
       // 初始化
-      // this.avatar.path = '/static/images/avatar/1.png'
-      // this.photo.path = ''
-      // this.elements = []
-      // this.drawimage()
       let _this = this
       wx.showActionSheet({
         itemList: ['选择照片', '选择头像'],
@@ -556,23 +478,45 @@ export default {
         this.list = this.photoList
       } else if (this.active === 'icon') {
         this.list = this.iconList
+      } else if (this.active === 'text') {
+        this.list = this.textList
       }
     },
     select2 (e) {
+      let _this = this
       console.log(e)
+      let icon = JSON.parse(JSON.stringify(this.icon))
       if (this.active === 'avatar') {
         this.avatar.path = this.avatarList[e].path
+        _this.drawimage()
       } else if (this.active === 'photo') {
         this.photo.path = this.photoList[e].path
+        _this.drawimage()
       } else if (this.active === 'icon') {
-        let icon = JSON.parse(JSON.stringify(this.icon))
-        icon.path = this.iconList[e].path
-        icon.id = this.timer
-        icon.active = true
-        this.timer++
-        this.elements.push(icon)
+        wx.downloadFile({
+          url: _this.iconList[e].path,
+          success: function (r) {
+            icon.path = r.tempFilePath
+            icon.id = _this.timer
+            icon.active = true
+            _this.timer++
+            _this.elements.push(icon)
+            _this.drawimage()
+          }
+        })
+      } else if (this.active === 'text') {
+        wx.downloadFile({
+          url: _this.textList[e].path,
+          success: function (r) {
+            icon.path = r.tempFilePath
+            icon.id = _this.timer
+            icon.active = true
+            _this.timer++
+            _this.elements.push(icon)
+            _this.drawimage()
+          }
+        })
       }
-      this.drawimage()
     },
     next () {
       wx.showLoading({
@@ -625,10 +569,33 @@ export default {
           }
         }
       })
+    },
+    init () {
+      let arr = []
+      for (let i = 1; i <= 30; i++) {
+        let path = i > 9 ? 'https://image.cloudbooks.cc/image/icon/00' + i + '.png' : 'https://image.cloudbooks.cc/image/icon/000' + i + '.png'
+        let item = {
+          path: path
+        }
+        arr.push(item)
+      }
+      this.iconList = arr
+
+      let textArr = []
+      for (let i = 1; i <= 26; i++) {
+        let path = i > 9 ? 'https://image.cloudbooks.cc/image/text/00' + i + '.png' : 'https://image.cloudbooks.cc/image/text/000' + i + '.png'
+        let item = {
+          path: path
+        }
+        textArr.push(item)
+      }
+      this.textList = textArr
     }
   },
 
   mounted () {
+    // 初始化贴纸数组
+    this.init()
     this.context = wx.createCanvasContext('firstCanvas')
     if (this.active === 'avatar') {
       this.list = this.avatarList
@@ -636,6 +603,8 @@ export default {
       this.list = this.photoList
     } else if (this.active === 'icon') {
       this.list = this.iconList
+    } else if (this.active === 'text') {
+      this.list = this.textList
     }
 
     if (this.$mp.query.path) {
@@ -646,7 +615,6 @@ export default {
     } else {
       this.getInfo()
     }
-    // this.drawimage()
   }
 }
 </script>
