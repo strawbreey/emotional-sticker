@@ -6,6 +6,6 @@ app.$mount()
 
 export default {
   config: {
-    navigationBarTitleText: '情头贴纸'
+    navigationBarTitleText: '情侣头像'
   }
 }
