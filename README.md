@@ -13,8 +13,8 @@
 
 ## 运行项目
 ```
-  git clone https://github.com/strawbreey/mpvue-cnode.git
-  cd mpvue-cnode
+  git clone https://github.com/strawbreey/emotional-sticker.git
+  cd emotional-sticker
   npm install
   npm run dev
 
