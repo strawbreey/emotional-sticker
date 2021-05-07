@@ -13,7 +13,7 @@
   "dependencies": {
     "dgram": "^1.0.1",
     "flyio": "^0.5.4",
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.21",
     "minapp-api-promise": "^1.0.1",
     "mpvue": "^1.0.8",
     "mpvue-cropper": "^0.0.3",
